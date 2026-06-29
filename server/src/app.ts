@@ -9,6 +9,9 @@ import authRouter from "./routes/auth.routes";
 import categoryRouter from "./routes/category.routes";
 import productRouter from "./routes/product.routes";
 import orderRouter from "./routes/order.routes";
+import { connectDB } from "./config/db";
+
+connectDB();
 
 const app = express();
 
