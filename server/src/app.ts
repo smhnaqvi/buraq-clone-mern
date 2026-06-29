@@ -1,4 +1,4 @@
-import express from "express";
+import express, { NextFunction, RequestHandler } from "express";
 import cors from "cors";
 
 import { notFound } from "./middleware/notFound";
@@ -11,7 +11,9 @@ import productRouter from "./routes/product.routes";
 import orderRouter from "./routes/order.routes";
 import { connectDB } from "./config/db";
 
-connectDB();
+// Single promise — created once when module loads, reused on every request
+const dbConnection = connectDB();
+
 
 const app = express();
 
@@ -25,6 +27,14 @@ app.use(
     credentials: true,
   })
 );
+
+// Await the SAME promise on every request — after first resolve, instant
+const dbMiddleware: RequestHandler = (req, res, next) => {
+  dbConnection.then(() => next()).catch(next);
+};
+
+app.use(dbMiddleware);
+
 
 app.use("/api/health", healthRouter);
 app.use("/api/auth", authRouter);
