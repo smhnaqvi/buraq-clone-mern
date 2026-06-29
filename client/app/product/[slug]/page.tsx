@@ -2,6 +2,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getProductBySlug, getProducts } from "@/lib/api";
+import AddToCartButton from "@/components/AddToCartButton";
 
 // Pre-render the most recent products at build time.
 export async function generateStaticParams() {
@@ -30,8 +31,32 @@ export default async function ProductPage(
   const product = await getProductBySlug(slug);
   if (!product) notFound();
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    image: product.images,
+    description: product.description,
+    offers: {
+      "@type": "Offer",
+      price: product.price,
+      priceCurrency: "USD",
+      availability:
+        product.countInStock > 0
+          ? "https://schema.org/InStock"
+          : "https://schema.org/OutOfStock",
+    },
+  };
+
   return (
     <div className="grid gap-8 md:grid-cols-2">
+      {/* JSON-LD structured data for rich results. `<` is escaped to prevent XSS. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+        }}
+      />
       <div className="relative aspect-square overflow-hidden rounded-lg bg-gray-100">
         {product.images[0] && (
           <Image src={product.images[0]} alt={product.name} fill className="object-cover" />
@@ -44,7 +69,7 @@ export default async function ProductPage(
         <p className="text-sm text-gray-500">
           {product.countInStock > 0 ? "In stock" : "Out of stock"}
         </p>
-        {/* "Add to cart" (client component) arrives in Phase 5 */}
+        <AddToCartButton product={product} />
       </div>
     </div>
   );
