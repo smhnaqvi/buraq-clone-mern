@@ -14,6 +14,7 @@ export interface Product {
   images: string[];
   countInStock: number;
   category: Category;
+  salePrice?: number;
 }
 
 export interface ProductListResponse {
